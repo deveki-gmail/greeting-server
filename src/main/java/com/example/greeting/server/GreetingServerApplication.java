@@ -1,5 +1,7 @@
 package com.example.greeting.server;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,22 +27,34 @@ public class GreetingServerApplication {
 	
 	public static void main(String[] args) {
 		SpringApplication.run(GreetingServerApplication.class, args);
+		try {
+			System.out.println("Greeting server stared : "+InetAddress.getLocalHost());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	
 	@GetMapping("/greet")
 	public String hello(){
-		LocalTime time = LocalTime.now();
-		int hour = time.getHour();
-		if(hour < 12){
-			return map.get(Integer.valueOf(1));
+		try {
+			System.out.println("Request processed at server "+InetAddress.getLocalHost());
+			LocalTime time = LocalTime.now();
+			int hour = time.getHour();
+			if(hour < 12){
+				return map.get(Integer.valueOf(1));
+			}
+			if(hour > 12 && hour < 18){
+				return map.get(Integer.valueOf(2));
+			}
+			if(hour > 18){
+				return map.get(Integer.valueOf(3));
+			}
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		if(hour > 12 && hour < 18){
-			return map.get(Integer.valueOf(2));
-		}
-		if(hour > 18){
-			return map.get(Integer.valueOf(3));
-		}
+		
 		return map.get(Integer.valueOf(3));
 	}
 }
