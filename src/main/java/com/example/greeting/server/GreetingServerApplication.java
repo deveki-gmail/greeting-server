@@ -5,11 +5,16 @@ import java.net.UnknownHostException;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
@@ -18,7 +23,12 @@ public class GreetingServerApplication {
 
 	static Map<Integer, String> map  = new HashMap<Integer, String>();
 	
+	static Logger logger = LoggerFactory.getLogger(GreetingServerApplication.class);
+	
 	String randomName;
+	
+	@Value("${greet.endpoint.sleep.in.seconds:2}")
+	private int sleepTime;
 	
 	static{
 		map.put(Integer.valueOf(1), "Good Morning");
@@ -31,7 +41,7 @@ public class GreetingServerApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(GreetingServerApplication.class, args);
 		try {
-			System.out.println("Greeting server stared : "+InetAddress.getLocalHost());
+			logger.info("Greeting server stared : "+InetAddress.getLocalHost());
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -39,33 +49,50 @@ public class GreetingServerApplication {
 	
 	
 	@GetMapping("/greet")
-	public String hello(){
+	public String hello(@RequestParam(name = "name", required = false) String name){
+		String tempName = ", everyone!";
 		try {
-			System.out.println("Request processed at server "+InetAddress.getLocalHost());
+			logger.info("Request processed at server "+InetAddress.getLocalHost()+" for name "+(name!=null && !name.trim().isEmpty() ? name : ""));
+			
+			if(sleepTime > 0) 
+			{
+				logger.info("Processing..... please wait for "+sleepTime+" seconds.");
+			}
+			Thread.sleep(sleepTime * 1000);
 			
 			if(randomName == null) 
 			{
 				randomName = names[new Random().nextInt(names.length - 1)];
 			}
-			System.out.println("Today's hero (greeting server) : "+randomName);
 			
+			logger.info("Today's hero (greeting server) : "+randomName);
+			
+			
+			if(Objects.nonNull(name) && name.trim().length()!= 0) 
+			{
+				tempName = ", "+name+"!";
+			}
 			LocalTime time = LocalTime.now();
 			int hour = time.getHour();
 			if(hour < 12){
-				return map.get(Integer.valueOf(1));
+				
+				return map.get(Integer.valueOf(1))+tempName;
 			}
 			if(hour > 12 && hour < 18){
-				return map.get(Integer.valueOf(2));
+				return map.get(Integer.valueOf(2))+tempName;
 			}
 			if(hour > 18){
-				return map.get(Integer.valueOf(3));
+				return map.get(Integer.valueOf(3))+tempName;
 			}
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
-		return map.get(Integer.valueOf(3));
+		return map.get(Integer.valueOf(3))+tempName;
 	}
 	
 	String[] names = {"Subhas Chandra Bose", 
